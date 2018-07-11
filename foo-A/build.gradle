@@ -1,0 +1,76 @@
+buildscript {
+    repositories {
+        maven { url "https://plugins.gradle.org/m2/" }
+        jcenter()
+    }
+    dependencies {
+        classpath "com.github.jengelman.gradle.plugins:shadow:$shadowPluginV"
+        classpath "gradle.plugin.com.github.maiflai:gradle-scalatest:$scalatestPluginV"
+    }
+}
+
+allprojects {
+    group = 'com.github.geoheil.foo'
+    version = '1.0.0'
+
+    ext {
+        scalaFullV = "${scalaMinorV}.$scalaPatchV"
+
+        deps = [fooBSomething              : "com.github.geoheil:foo-b-something:$fooBVersion",
+                fooBSomethingElse    : "com.github.geoheil:foo-b-something-else:$fooBVersion",
+                pgdown         : "org.pegdown:pegdown:$pgdownV",
+                scalaT         : "org.scalatest:scalatest_${scalaMinorV}:$scalatestV",
+                scalaLib               : "org.scala-lang:scala-library:$scalaFullV"
+        ]
+    }
+
+    repositories {
+        jcenter()
+    }
+
+}
+
+subprojects { subproject ->
+    apply plugin: 'scala'
+    apply plugin: 'com.github.johnrengelman.shadow'
+    apply plugin: 'com.github.maiflai.scalatest'
+    
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+    dependencies {
+
+        compile deps.fooBSomething
+
+        compileOnly deps.scalaLib
+
+        testImplementation deps.scalaT
+        testRuntime deps.pgdown
+    }
+
+    configurations {
+        testCompile.extendsFrom compileOnly
+    }
+
+
+    test {
+        maxParallelForks = 1
+        // fix overly long classpath which is causing problems on windows
+        doFirst {
+            def cp = CollectionUtils.join(File.pathSeparator, classpath.getFiles())
+            environment 'CLASSPATH', cp
+            classpath = classpath.filter { false }
+        }
+    }
+
+    shadowJar {
+        zip64 true
+        dependencies {
+            exclude(dependency("com.chuusai:shapeless_$scalaMinorV"))
+        }
+    }
+
+    // TODO adding this fails it
+    //    task build { dependsOn gradle.includedBuilds*.task(':build') }
+
+}

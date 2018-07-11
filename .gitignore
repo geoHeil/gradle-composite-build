@@ -1,0 +1,4 @@
+foo-A/.gradle
+foo-B/.gradle
+foo-B/foo-b-something-else/build
+foo-B/foo-b-something/build

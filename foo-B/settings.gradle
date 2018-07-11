@@ -1,0 +1,3 @@
+rootProject.name = 'foo-b'
+include ':foo-b-something'
+include ':foo-b-something-else'

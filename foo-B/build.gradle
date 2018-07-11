@@ -1,0 +1,63 @@
+description = 'reusable module library '
+
+buildscript {
+    repositories {
+        maven { url "https://plugins.gradle.org/m2/" }
+        jcenter()
+    }
+    dependencies {
+        classpath "gradle.plugin.com.github.maiflai:gradle-scalatest:$scalatestPluginV"
+    }
+}
+
+allprojects {
+    group = 'com.github.geoheil.fooB'
+    version = '0.1.0'
+
+    ext {
+        scalaFullV = "${scalaMinorV}.$scalaPatchV"
+        sparkFullV = "$sparkOpenV.$sparkOpenVPatch.$hdpV"
+        sparkTestingBaseV = "${sparkOpenV}.${sparkOpenVPatch}_${sparkTestingBaseNonSparkV}"
+
+        deps = [scalaT         : "org.scalatest:scalatest_${scalaMinorV}:$scalatestV",
+        pgdown         : "org.pegdown:pegdown:$pgdownV",
+                scalaLib       : "org.scala-lang:scala-library:$scalaFullV"
+        ]
+    }
+
+    repositories {
+        jcenter()
+    }
+
+}
+
+subprojects { subproject ->
+    apply plugin: 'scala'
+    apply plugin: 'com.github.maiflai.scalatest'
+
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+    dependencies {
+
+        compileOnly deps.scalaLib
+
+        testImplementation deps.scalaT
+        testRuntime deps.pgdown
+    }
+
+    configurations {
+        testCompile.extendsFrom compileOnly
+    }
+
+
+    test {
+        maxParallelForks = 1
+        // fix overly long classpath which is causing problems on windows
+        doFirst {
+            def cp = CollectionUtils.join(File.pathSeparator, classpath.getFiles())
+            environment 'CLASSPATH', cp
+            classpath = classpath.filter { false }
+        }
+    }
+}
